@@ -6,6 +6,8 @@ dotenv.config({ path: __dirname + "../../.env" });
 
 const app: Express = express();
 
+const port: number | string = process.env.PORT || 3000;
+
 app.use(express.json({ limit: "50mb" }));
 app.use(
     cors({
@@ -18,6 +20,6 @@ app.get("/", (req: Request, res: Response) => {
 });
 app.use(car);
 
-app.listen(5000, () => {
+app.listen(port, () => {
     console.log("Listening on port 5000");
 });
