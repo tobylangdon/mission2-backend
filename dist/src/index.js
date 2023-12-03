@@ -32,6 +32,7 @@ const carRecognition_1 = __importDefault(require("./routes/carRecognition"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config({ path: __dirname + "../../.env" });
 const app = (0, express_1.default)();
+const port = process.env.PORT || 3000;
 app.use(express_1.default.json({ limit: "50mb" }));
 app.use((0, cors_1.default)({
     origin: "*",
@@ -41,6 +42,6 @@ app.get("/", (req, res) => {
     res.send("Hello world - the server is working!");
 });
 app.use(carRecognition_1.default);
-app.listen(5000, () => {
+app.listen(port, () => {
     console.log("Listening on port 5000");
 });
