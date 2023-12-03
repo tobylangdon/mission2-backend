@@ -15,7 +15,7 @@ jobs:
 
         env:
             AZURE_WEBAPP_NAME: mission2-server
-            AZURE_WEBAPP_PACKAGE_PATH: /dist/src
+            AZURE_WEBAPP_PACKAGE_PATH: ./dist/src/
 
         steps:
             - uses: actions/checkout@v4
@@ -62,5 +62,5 @@ jobs:
               with:
                   app-name: "mission2-server"
                   slot-name: "Production"
-                  package: .
+                  package: ${{env.AZURE_WEBAPP_PACKAGE_PATH}}
                   publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1BF041B44F0641FEB36BE1A74B6FE796 }}
