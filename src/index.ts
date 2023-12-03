@@ -13,6 +13,9 @@ app.use(
         credentials: true,
     })
 );
+app.get("/", (req: Request, res: Response) => {
+    res.send("Hello world - the server is working!");
+});
 app.use(car);
 
 app.listen(5000, () => {

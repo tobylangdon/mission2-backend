@@ -37,6 +37,9 @@ app.use((0, cors_1.default)({
     origin: "*",
     credentials: true,
 }));
+app.get("/", (req, res) => {
+    res.send("Hello world - the server is working!");
+});
 app.use(carRecognition_1.default);
 app.listen(5000, () => {
     console.log("Listening on port 5000");
