@@ -16,7 +16,7 @@ jobs:
                 # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
         env:
             AZURE_WEBAPP_NAME: mission2-server # set this to your application's name
-            AZURE_WEBAPP_PACKAGE_PATH: "./dist" # set this to the path to your web app project, defaults to the repository root
+            AZURE_WEBAPP_PACKAGE_PATH: "." # set this to the path to your web app project, defaults to the repository root
             PORT: 3000
 
         steps:
