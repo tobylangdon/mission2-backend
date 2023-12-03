@@ -62,5 +62,5 @@ jobs:
               with:
                   app-name: "mission2-server"
                   slot-name: "Production"
-                  package: ${{env.AZURE_WEBAPP_PACKAGE_PATH}}
+                  package: "./dist/src"
                   publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1BF041B44F0641FEB36BE1A74B6FE796 }}
