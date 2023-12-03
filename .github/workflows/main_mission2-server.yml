@@ -15,7 +15,7 @@ jobs:
 
         env:
             AZURE_WEBAPP_NAME: mission2-server
-            AZURE_WEBAPP_PACKAGE_PATH: /dist
+            AZURE_WEBAPP_PACKAGE_PATH: /dist/src
 
         steps:
             - uses: actions/checkout@v4
