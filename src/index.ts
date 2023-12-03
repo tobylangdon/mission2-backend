@@ -21,5 +21,5 @@ app.get("/", (req: Request, res: Response) => {
 app.use(car);
 
 app.listen(port, () => {
-    console.log("Listening on port 5000");
+    console.log("Listening on port", port);
 });

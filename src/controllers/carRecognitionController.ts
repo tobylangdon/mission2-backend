@@ -1,8 +1,4 @@
 import { Response, Request } from "express";
-import axios from "axios";
-import sharp from "sharp";
-import fs from "fs";
-import { spawn } from "child_process";
 
 interface CheckImageResponse {
     type: string | undefined;
@@ -52,83 +48,9 @@ const carTypesToTags: CarTypes[] = [
     { type: "Super Car", alternatives: ["lamborghini", "maserati", "bugatti", "ferrari", "supercar"] },
 ];
 
-const callAzureApiWithImageData = async (base64Image: string): Promise<AzureResponse | any> => {
-    // Remove the data URL prefix and create a Buffer from base64 data
-
-    // Use sharp to convert to JPEG
-    const randNum: number = Math.random() * 1000;
-    const imageSrc: string = `./TEMP_IMAGES/image${randNum.toString()}.jpg`;
-
-    try {
-        base64Image = base64Image.replace(/^data:image\/\w+;base64,/, "");
-        const bufferData = Buffer.from(base64Image, "base64");
-        // Convert to JPEG and save the image
-        const outputBuffer = await sharp(bufferData).toFormat("jpeg").toBuffer();
-        await fs.promises.writeFile(imageSrc, outputBuffer);
-
-        console.log("Image saved as ", imageSrc);
-
-        // Run Python script in order to send through bytes of image data to azure API
-        const python = spawn("python", [`./getAzureImage.py`, imageSrc]);
-
-        // Collect data from script
-        let buf = "";
-        for await (const data of python.stdout) {
-            console.log("Pipe data from python script ...");
-            buf += data;
-        }
-
-        //Turn the collected data into javascript json file
-        var responseData = buf.toString().replace(/\'/g, '"');
-        function replaceAll(string: string, search: string, replace: string) {
-            return string.split(search).join(replace);
-        }
-
-        //Replace T with t and F with f as python booleans are capitalised
-        responseData = replaceAll(responseData, "T", "t");
-        responseData = replaceAll(responseData, "F", "f");
-        const response: AzureResponse | any = JSON.parse(responseData);
-
-        // Clean up: Remove the temporary image file
-        await fs.promises.rm(imageSrc, { force: true });
-
-        return response;
-    } catch (error) {
-        console.error(error);
-
-        // Clean up: Remove the temporary image file
-        await fs.promises.rm(imageSrc, { force: true });
-
-        return error;
-    }
-};
-
-const callAzureApiURL = async (url: string): Promise<AzureResponse | boolean> => {
-    const KEY: string = "d780a27e3b2b4441bc4c940ac82a6223";
-
-    return await axios
-        .post(
-            "https://car-recogniser.cognitiveservices.azure.com/vision/v3.2/analyze?visualFeatures=Tags,Brands,Color",
-            { url: url },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Ocp-Apim-Subscription-Key": KEY,
-                },
-            }
-        )
-        .then((res) => {
-            return res.data;
-        })
-        .catch((error) => {
-            console.error("Error: ", error.response);
-            return false;
-        });
-};
-
 const validateCar = (tags: AzureTag[]): boolean => {
     for (const tag of tags) {
-        if (tag.name === "car") {
+        if (tag.name === "car" && tag.confidence > 0.95) {
             return true;
         }
     }
@@ -214,30 +136,16 @@ const mostLikelyType = (tags: AzureTag[]): TypeAndColour => {
 
 export const checkImage = async (req: Request, res: Response<CheckImageResponse | ErrorImageResponse>): Promise<void> => {
     try {
-        var { url, isUrl } = req.body;
+        var { data: azureRes, dataType } = req.body;
 
-        //then calls the above functions which in turn calls the azure api endpoint checking the image
-        //will either return an AzureResponse or be equal to false
-        var azureRes: AzureResponse | any;
-        if (!isUrl || url.includes("base64,/")) {
-            azureRes = await callAzureApiWithImageData(url);
+        const { brands, tags }: AzureResponse = azureRes;
+        const isCar = validateCar(tags);
+        console.log(tags, brands);
+        if (!isCar) {
+            res.status(400).send({ message: "The image is not a car" });
         } else {
-            azureRes = await callAzureApiURL(url);
-        }
-
-        //if the api response works with no errors then validate data, otherwise send an error response back to client
-        if (azureRes) {
-            const { brands, tags }: AzureResponse = azureRes;
-            const isCar = validateCar(tags);
-            console.log(tags, brands);
-            if (!isCar) {
-                res.status(400).send({ message: "The image is not a car" });
-            } else {
-                const type = mostLikelyType(tags);
-                res.status(200).send({ type: type.type, colours: type.colours, brand: brands[0]?.name, message: "string" });
-            }
-        } else {
-            res.status(400).send({ message: "The image could not be used. Please try another image." });
+            const type = mostLikelyType(tags);
+            res.status(200).send({ type: type.type, colours: type.colours, brand: brands[0]?.name, message: "string" });
         }
     } catch {
         res.status(500).send({ message: "An internal server error occured. Please try a different image" });
