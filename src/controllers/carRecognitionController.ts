@@ -50,7 +50,7 @@ const carTypesToTags: CarTypes[] = [
 
 const validateCar = (tags: AzureTag[]): boolean => {
     for (const tag of tags) {
-        if (tag.name === "car" && tag.confidence > 0.95) {
+        if (tag.name === "car" && tag.confidence > 0.9) {
             return true;
         }
     }
